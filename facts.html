@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akashganga | Latest News</title>
+
+<!-- Fonts from main.html -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================
+   VARIABLES & RESET (from main.html)
+========================================================= */
+:root {
+  --void: #060810;
+  --web-blue: #1c3fae;
+  --web-blue-2: #3d63e8;
+  --spider-red: #e0242c;
+  --spider-red-2: #ff4d4d;
+  --star-gold: #ffcc33;
+  --web-white: #f2f4f9;
+  --line: rgba(242, 244, 249, .14);
+  --glass: rgba(14, 20, 38, .6);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--void);
+  color: var(--web-white);
+  font-family: 'Rajdhani', sans-serif;
+  cursor: none;
+}
+
+h1, h2, h3, .brand {
+  font-family: 'Bangers', cursive;
+  letter-spacing: .04em;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--spider-red);
+  color: #fff;
+}
+
+#stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+#web-trail-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Custom Web Shooter Cursor from main.html */
+#cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width .12s ease, height .12s ease;
+  filter: drop-shadow(0 0 6px rgba(242, 244, 249, .85));
+}
+
+#cursor-dot svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#cursor-dot.pulse {
+  width: 30px;
+  height: 30px;
+}
+
+/* =========================================================
+   NAVIGATION & BRANDING (from main.html)
+========================================================= */
+nav.top-nav {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px clamp(18px, 5vw, 56px);
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.web-mark {
+  opacity: .55;
+}
+
+.web-mark svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.logo-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  flex: 0 0 auto;
+  background: linear-gradient(160deg, #1a0d12, #060810);
+  border: 1px solid rgba(242, 244, 249, .16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-box svg {
+  width: 24px;
+  height: 24px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: 'Bangers', cursive;
+  font-size: 19px;
+  letter-spacing: .05em;
+  color: var(--web-white);
+  line-height: 1.1;
+}
+
+.brand-tagline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: #8792bb;
+  margin-top: 1px;
+}
+
+.menu-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(14, 20, 38, .5);
+  cursor: none;
+  transition: .2s border-color, .2s background;
+}
+
+.menu-btn:hover {
+  border-color: var(--spider-red-2);
+  background: rgba(224, 36, 44, .1);
+}
+
+.menu-btn span {
+  width: 20px;
+  height: 2px;
+  background: var(--web-white);
+  border-radius: 2px;
+  transition: .25s transform, .25s opacity;
+}
+
+.menu-btn.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-btn.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-btn.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* =========================================================
+   SLIDEBAR / OFF-CANVAS DRAWER (from main.html)
+========================================================= */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 10, .6);
+  backdrop-filter: blur(2px);
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.drawer-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(300px, 84vw);
+  z-index: 31;
+  background: linear-gradient(180deg, rgba(11, 14, 28, .98), rgba(6, 8, 16, .99));
+  border-left: 1px solid var(--line);
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 20px;
+}
+
+.drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.drawer-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(242, 244, 249, .04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+}
+
+.drawer-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: #c3cbea;
+  border: 1px solid transparent;
+  transition: .2s background, .2s color, .2s border-color;
+}
+
+.drawer-link svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  stroke: currentColor;
+}
+
+.drawer-link:hover, .drawer-link.active {
+  color: var(--web-white);
+  background: linear-gradient(90deg, rgba(224, 36, 44, .25), rgba(61, 99, 232, .2));
+  border-color: rgba(255, 77, 77, .4);
+}
+
+/* =========================================================
+   MAIN CONTENT AREA
+========================================================= */
+.news-page {
+  min-height: calc(100vh - 88px);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 5% 50px;
+  overflow: hidden;
+}
+
+.news-content {
+  width: min(600px, 90%);
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 20px;
+}
+
+.cosmic-symbol {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 18px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cosmic-symbol::before {
+  content: "";
+  width: 31px;
+  height: 31px;
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 50%;
+  position: absolute;
+  transform: rotate(35deg);
+}
+
+.cosmic-symbol::after {
+  content: "✦";
+  font-size: 13px;
+  color: white;
+  text-shadow: 0 0 15px rgba(255, 255, 255, .8);
+}
+
+.mini-line {
+  width: 58px;
+  height: 1px;
+  margin: 0 auto 20px;
+  background: linear-gradient(90deg, transparent, var(--web-blue-2), var(--spider-red), transparent);
+  box-shadow: 0 0 12px rgba(70, 90, 255, .8);
+}
+
+.news-content h1 {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 600;
+  letter-spacing: 2px;
+  line-height: 1.25;
+  margin-bottom: 17px;
+  text-shadow: 0 0 6px rgba(224, 36, 44, .4);
+}
+
+.news-content h1 .gradient {
+  background: linear-gradient(90deg, var(--web-blue-2), var(--spider-red-2), var(--star-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.description {
+  width: min(480px, 100%);
+  margin: 0 auto 28px;
+  color: #b9c2e0;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.email-area {
+  width: min(490px, 100%);
+  margin: 0 auto;
+  position: relative;
+}
+
+.email-box {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  background: rgba(14, 20, 38, .6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: .3s;
+}
+
+.email-box:focus-within {
+  border-color: var(--spider-red-2);
+  box-shadow: 0 0 15px rgba(224, 36, 44, .25);
+}
+
+.email-box input {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  padding: 0 15px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: white;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+}
+
+.email-box input::placeholder {
+  color: rgba(255, 255, 255, .32);
+}
+
+.email-btn {
+  height: 42px;
+  border: none;
+  padding: 0 22px;
+  color: white;
+  cursor: none;
+  font-family: 'Bangers', cursive;
+  font-size: 14px;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--spider-red), var(--web-blue));
+  box-shadow: 0 0 18px rgba(224, 36, 44, .3);
+  transition: .3s;
+}
+
+.email-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px rgba(224, 36, 44, .5);
+}
+
+#message {
+  min-height: 20px;
+  margin-top: 11px;
+  font-size: 12px;
+  letter-spacing: .5px;
+  color: var(--star-gold);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: .35s;
+}
+
+#message.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.social-title {
+  margin-top: 25px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #8792bb;
+  text-transform: uppercase;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.social-icons a {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, .6);
+  border: 1px solid var(--line);
+  background: rgba(14, 20, 38, .4);
+  text-decoration: none;
+  font-size: 12px;
+  transition: .3s;
+  cursor: none;
+}
+
+.social-icons a:hover {
+  color: white;
+  border-color: var(--spider-red-2);
+  transform: translateY(-3px);
+  background: rgba(224, 36, 44, .15);
+}
+
+.bottom-nav {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bottom-nav a {
+  color: #8792bb;
+  text-decoration: none;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: .3s;
+}
+
+.bottom-nav a:hover {
+  color: var(--star-gold);
+}
+
+.bottom-nav span {
+  color: rgba(255, 255, 255, .12);
+  font-size: 8px;
+}
+
+/* Floating Planets Styling */
+.planet {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  transition: transform .25s ease-out;
+}
+
+.planet svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  animation: planetFloat 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px rgba(65, 85, 255, .32));
+}
+
+@keyframes planetFloat {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -12px; }
+}
+
+.planet-left { width: 175px; height: 175px; left: 5%; top: 25%; }
+.planet-right { width: 210px; height: 210px; right: 5%; top: 17%; }
+.planet-small-left { width: 62px; height: 62px; left: 18%; bottom: 12%; }
+.planet-small-right { width: 75px; height: 75px; right: 19%; bottom: 10%; }
+
+@media(max-width:650px) {
+  .email-box {
+    height: auto;
+    flex-direction: column;
+    padding: 7px;
+    gap: 6px;
+  }
+  .email-box input, .email-btn {
+    width: 100%;
+    height: 42px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- STARFIELD & TRAIL CANVAS FROM main.html -->
+<canvas id="stars"></canvas>
+<canvas id="web-trail-canvas"></canvas>
+
+<!-- CURSOR DOT FROM main.html -->
+<div id="cursor-dot">
+  <svg viewBox="0 0 40 40">
+    <g stroke="#ffffff" stroke-width="1.6" fill="none">
+      <circle cx="20" cy="20" r="6"/><circle cx="20" cy="20" r="11.5"/><circle cx="20" cy="20" r="17"/>
+      <line x1="20" y1="3" x2="20" y2="37"/><line x1="3" y1="20" x2="37" y2="20"/>
+      <line x1="8" y1="8" x2="32" y2="32"/><line x1="32" y1="8" x2="8" y2="32"/>
+    </g>
+    <circle cx="20" cy="20" r="3" fill="#ffffff"/>
+  </svg>
+</div>
+
+<!-- TOP NAV FROM main.html -->
+<nav class="top-nav">
+  <div class="brand-lockup">
+    <span class="web-mark">
+      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" stroke="#f2f4f9" stroke-width="1">
+        <circle cx="20" cy="20" r="17" fill="none" opacity=".5"/>
+        <circle cx="20" cy="20" r="11" fill="none" opacity=".5"/>
+        <g opacity=".5">
+          <line x1="20" y1="3" x2="20" y2="37"/>
+          <line x1="3" y1="20" x2="37" y2="20"/>
+          <line x1="7.5" y1="7.5" x2="32.5" y2="32.5"/>
+          <line x1="32.5" y1="7.5" x2="7.5" y2="32.5"/>
+        </g>
+      </svg>
+    </span>
+    <a href="main.html" class="brand-row">
+      <span class="logo-box">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="#f2f4f9" stroke-width="1.4"/>
+          <path d="M12 6.5c0 2.9 2.6 5.5 5.5 5.5-2.9 0-5.5 2.6-5.5 5.5 0-2.9-2.6-5.5-5.5-5.5 2.9 0 5.5-2.6 5.5-5.5Z" fill="#f2f4f9"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <span class="brand-title">AKASHGANGA</span>
+        <span class="brand-tagline">Explore Beyond</span>
+      </div>
+    </a>
+  </div>
+
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- OFF-CANVAS DRAWER SLIDEBAR FROM main.html -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <span class="brand-title" style="font-size:16px;">Menu</span>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#f2f4f9" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav">
+    <a class="drawer-link" href="main.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home
+    </a>
+    <a class="drawer-link" href="exoplanets.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><ellipse cx="12" cy="12" rx="10" ry="3.4" transform="rotate(-24 12 12)"/></svg>
+      Exoplanets
+    </a>
+    <a class="drawer-link active" href="facts.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      Facts
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="news-page">
+
+    <!-- PLANET GRAPHICS FROM facts.html -->
+    <div class="planet planet-left">
+        <svg viewBox="0 0 200 200">
+            <defs>
+                <radialGradient id="jupiterGradient">
+                    <stop offset="0%" stop-color="#e9cba1"/>
+                    <stop offset="35%" stop-color="#c19065"/>
+                    <stop offset="70%" stop-color="#765041"/>
+                    <stop offset="100%" stop-color="#211b22"/>
+                </radialGradient>
+            </defs>
+            <circle cx="100" cy="100" r="91" fill="url(#jupiterGradient)"/>
+            <ellipse cx="100" cy="67" rx="88" ry="9" fill="#d9ad82" opacity=".5"/>
+            <ellipse cx="100" cy="88" rx="89" ry="11" fill="#62443a" opacity=".7"/>
+            <ellipse cx="100" cy="112" rx="90" ry="9" fill="#d5a47c" opacity=".48"/>
+            <ellipse cx="100" cy="140" rx="86" ry="12" fill="#593d36" opacity=".5"/>
+            <ellipse cx="137" cy="126" rx="20" ry="10" fill="#a95f49" opacity=".8"/>
+            <circle cx="68" cy="55" r="26" fill="white" opacity=".06"/>
+        </svg>
+    </div>
+
+    <div class="planet planet-right">
+        <svg viewBox="0 0 24 240">
+            <defs>
+                <radialGradient id="saturnGradient">
+                    <stop offset="0%" stop-color="#f2dca9"/>
+                    <stop offset="45%" stop-color="#c6a16c"/>
+                    <stop offset="75%" stop-color="#806347"/>
+                    <stop offset="100%" stop-color="#211b20"/>
+                </radialGradient>
+                <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#816546"/>
+                    <stop offset="30%" stop-color="#ecd49f"/>
+                    <stop offset="55%" stop-color="#6d5745"/>
+                    <stop offset="80%" stop-color="#dfc28c"/>
+                    <stop offset="100%" stop-color="#594839"/>
+                </linearGradient>
+            </defs>
+            <ellipse cx="120" cy="122" rx="108" ry="39" fill="none" stroke="url(#ringGradient)" stroke-width="11" opacity=".75" transform="rotate(-15 120 122)"/>
+            <ellipse cx="120" cy="122" rx="101" ry="32" fill="none" stroke="#382d27" stroke-width="4" opacity=".8" transform="rotate(-15 120 122)"/>
+            <circle cx="120" cy="120" r="67" fill="url(#saturnGradient)"/>
+            <ellipse cx="120" cy="100" rx="65" ry="7" fill="#f1d8a3" opacity=".45"/>
+            <ellipse cx="120" cy="121" rx="67" ry="8" fill="#765d44" opacity=".4"/>
+            <ellipse cx="120" cy="143" rx="60" ry="6" fill="#e1c68f" opacity=".4"/>
+            <path d="M 18 110 Q 120 165 222 110" fill="none" stroke="url(#ringGradient)" stroke-width="9" opacity=".75"/>
+        </svg>
+    </div>
+
+    <div class="planet planet-small-left">
+        <svg viewBox="0 0 100 100">
+            <defs>
+                <radialGradient id="bluePlanet">
+                    <stop offset="0%" stop-color="#83b8ff"/>
+                    <stop offset="55%" stop-color="#3158b9"/>
+                    <stop offset="100%" stop-color="#08132f"/>
+                </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="43" fill="url(#bluePlanet)"/>
+            <path d="M12 48 Q50 28 88 48" fill="none" stroke="#a7c9ff" stroke-width="3" opacity=".4"/>
+            <path d="M17 67 Q50 50 84 65" fill="none" stroke="#162e72" stroke-width="4" opacity=".6"/>
+        </svg>
+    </div>
+
+    <div class="planet planet-small-right">
+        <svg viewBox="0 0 100 100">
+            <defs>
+                <radialGradient id="redPlanet">
+                    <stop offset="0%" stop-color="#ff9a83"/>
+                    <stop offset="55%" stop-color="#a83b3c"/>
+                    <stop offset="100%" stop-color="#280c16"/>
+                </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="43" fill="url(#redPlanet)"/>
+            <circle cx="33" cy="37" r="7" fill="#65252b" opacity=".6"/>
+            <circle cx="65" cy="58" r="9" fill="#61272c" opacity=".55"/>
+            <circle cx="48" cy="70" r="5" fill="#702c2d" opacity=".55"/>
+        </svg>
+    </div>
+
+    <!-- MAIN NEWS FORM -->
+    <section class="news-content">
+        <div class="cosmic-symbol"></div>
+        <div class="mini-line"></div>
+
+        <h1>GET OUR <span class="gradient">LATEST NEWS</span></h1>
+
+        <p class="description">
+            Stay connected with the universe.
+            Discover new space missions, exoplanets, cosmic discoveries
+            and stories from beyond our world.
+        </p>
+
+        <div class="email-area">
+            <form id="newsForm">
+                <div class="email-box">
+                    <input type="email" id="email" placeholder="Enter your email address" required>
+                    <button type="submit" class="email-btn">SUBSCRIBE</button>
+                </div>
+            </form>
+            <div id="message">✓ Email sent successfully!</div>
+        </div>
+
+        <div class="social-title">FOLLOW THE JOURNEY</div>
+        <div class="social-icons">
+            <a href="#">◎</a>
+            <a href="#">f</a>
+            <a href="#">𝕏</a>
+            <a href="#">▶</a>
+            <a href="#">in</a>
+        </div>
+
+        <div class="bottom-nav">
+            <a href="main.html">HOME</a>
+            <span>/</span>
+            <a href="exoplanets.html">EXOPLANETS</a>
+            <span>/</span>
+            <a href="facts.html">FACTS</a>
+        </div>
+    </section>
+
+</main>
+
+<script>
+/* =========================================================
+   1. STARFIELD BACKGROUND (from main.html)
+========================================================= */
+(function(){
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let w, h, stars = [];
+
+  function resize(){ 
+    w = canvas.width = window.innerWidth; 
+    h = canvas.height = document.documentElement.scrollHeight; 
+  }
+
+  function makeStars(){
+    stars = [];
+    const count = Math.floor((w * h) / 9500);
+    for(let i = 0; i < count; i++){
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.3 + .3,
+        speed: Math.random() * .4 + .05,
+        phase: Math.random() * Math.PI * 2,
+        gold: Math.random() < .12
+      });
+    }
+  }
+
+  function draw(t){
+    ctx.fillStyle = '#060810'; 
+    ctx.fillRect(0, 0, w, h);
+    for(const s of stars){
+      const tw = .5 + .5 * Math.sin(t * .001 * s.speed * 4 + s.phase);
+      ctx.globalAlpha = .25 + tw * .75;
+      ctx.fillStyle = s.gold ? '#ffcc33' : '#f2f4f9';
+      ctx.beginPath(); 
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); 
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); makeStars(); });
+  resize(); 
+  makeStars(); 
+  requestAnimationFrame(draw);
+})();
+
+/* =========================================================
+   2. WEB-SHOOTER CURSOR & CANVAS TRAIL (from main.html)
+========================================================= */
+(function(){
+  const dot = document.getElementById('cursor-dot');
+  const canvas = document.getElementById('web-trail-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, segments = [], sparks = [];
+
+  function resize(){ 
+    w = canvas.width = window.innerWidth; 
+    h = canvas.height = window.innerHeight; 
+  }
+  window.addEventListener('resize', resize); 
+  resize();
+
+  const SPARK_COLORS = ['224,36,44', '61,99,232'];
+
+  function spawnSparks(x, y, count){
+    for(let i = 0; i < count; i++){
+      const angle = Math.random() * Math.PI * 2;
+      const speed = .6 + Math.random() * 1.8;
+      sparks.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: .8 + Math.random() * 1.6,
+        life: 1,
+        color: SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]
+      });
+    }
+    if(sparks.length > 140) sparks.splice(0, sparks.length - 140);
+  }
+
+  let lastX = null, lastY = null;
+  function addPoint(x, y){
+    dot.style.left = x + 'px'; 
+    dot.style.top = y + 'px';
+    const dist = lastX === null ? 999 : Math.hypot(x - lastX, y - lastY);
+    if(dist > 4){
+      if(lastX !== null) segments.push({x1: lastX, y1: lastY, x2: x, y2: y, life: 1});
+      spawnSparks(x, y, 2 + Math.floor(Math.random() * 2));
+      lastX = x; 
+      lastY = y;
+      if(segments.length > 10) segments.shift();
+    }
+  }
+
+  window.addEventListener('mousemove', e => addPoint(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    const t = e.touches[0]; 
+    if(!t) return; 
+    addPoint(t.clientX, t.clientY);
+  }, {passive: true});
+
+  window.addEventListener('mousedown', () => { 
+    dot.classList.add('pulse'); 
+    if(lastX !== null) spawnSparks(lastX, lastY, 14); 
+  });
+  window.addEventListener('mouseup', () => dot.classList.remove('pulse'));
+
+  function render(){
+    ctx.clearRect(0, 0, w, h);
+
+    for(const s of segments){
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.strokeStyle = `rgba(242,244,249,${(0.75 * s.life).toFixed(3)})`;
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+    segments.forEach(s => s.life -= 0.12);
+    segments = segments.filter(s => s.life > 0);
+
+    for(const p of sparks){
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.life.toFixed(3)})`;
+      ctx.shadowColor = `rgba(${p.color},.9)`;
+      ctx.shadowBlur = 4;
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    sparks.forEach(p => { 
+      p.x += p.vx; 
+      p.y += p.vy; 
+      p.vx *= .94; 
+      p.vy *= .94; 
+      p.life -= 0.028; 
+    });
+    sparks = sparks.filter(p => p.life > 0);
+
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+
+/* =========================================================
+   3. DRAWER SLIDEBAR TOGGLE (from main.html)
+========================================================= */
+(function(){
+  const btn = document.getElementById('menuBtn');
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('drawerOverlay');
+  const closeBtn = document.getElementById('drawerClose');
+
+  function openDrawer(){
+    drawer.classList.add('open'); 
+    overlay.classList.add('show'); 
+    btn.classList.add('open');
+  }
+
+  function closeDrawer(){
+    drawer.classList.remove('open'); 
+    overlay.classList.remove('show'); 
+    btn.classList.remove('open');
+  }
+
+  btn.addEventListener('click', () => drawer.classList.contains('open') ? closeDrawer() : openDrawer());
+  closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+})();
+
+/* =========================================================
+   4. PLANET MOVEMENT ON MOUSE MOVE
+========================================================= */
+const planets = document.querySelectorAll(".planet");
+document.addEventListener("mousemove", function(event) {
+    const x = event.clientX / window.innerWidth - 0.5;
+    const y = event.clientY / window.innerHeight - 0.5;
+
+    planets.forEach(function(planet, index) {
+        const strength = (index + 1) * 7;
+        planet.style.transform = `translate(${x * strength}px, ${y * strength}px)`;
+    });
+});
+
+/* =========================================================
+   5. EMAIL FORM HANDLER
+========================================================= */
+const form = document.getElementById("newsForm");
+const email = document.getElementById("email");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", function(event) {
+    event.preventDefault();
+    if (!email.value.trim()) return;
+
+    message.classList.add("show");
+    form.reset();
+
+    setTimeout(function() {
+        message.classList.remove("show");
+    }, 3500);
+});
+</script>
+
+</body>
+</html>

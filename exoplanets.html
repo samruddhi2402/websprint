@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akashganga | Exoplanets</title>
+
+<!-- Fonts from main.html -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================
+   VARIABLES & RESET (from main.html)
+========================================================= */
+:root {
+  --void: #060810;
+  --web-blue: #1c3fae;
+  --web-blue-2: #3d63e8;
+  --spider-red: #e0242c;
+  --spider-red-2: #ff4d4d;
+  --star-gold: #ffcc33;
+  --web-white: #f2f4f9;
+  --line: rgba(242, 244, 249, .14);
+  --glass: rgba(14, 20, 38, .6);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--void);
+  color: var(--web-white);
+  font-family: 'Rajdhani', sans-serif;
+  cursor: none;
+}
+
+h1, h2, h3, .brand {
+  font-family: 'Bangers', cursive;
+  letter-spacing: .04em;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--spider-red);
+  color: #fff;
+}
+
+#stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+#web-trail-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Custom Web Shooter Cursor from main.html */
+#cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width .12s ease, height .12s ease;
+  filter: drop-shadow(0 0 6px rgba(242, 244, 249, .85));
+}
+
+#cursor-dot svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#cursor-dot.pulse {
+  width: 30px;
+  height: 30px;
+}
+
+/* =========================================================
+   NAVIGATION & BRANDING (from main.html)
+========================================================= */
+nav.top-nav {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px clamp(18px, 5vw, 56px);
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.web-mark {
+  opacity: .55;
+}
+
+.web-mark svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.logo-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  flex: 0 0 auto;
+  background: linear-gradient(160deg, #1a0d12, #060810);
+  border: 1px solid rgba(242, 244, 249, .16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-box svg {
+  width: 24px;
+  height: 24px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: 'Bangers', cursive;
+  font-size: 19px;
+  letter-spacing: .05em;
+  color: var(--web-white);
+  line-height: 1.1;
+}
+
+.brand-tagline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: #8792bb;
+  margin-top: 1px;
+}
+
+.menu-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(14, 20, 38, .5);
+  cursor: none;
+  transition: .2s border-color, .2s background;
+}
+
+.menu-btn:hover {
+  border-color: var(--spider-red-2);
+  background: rgba(224, 36, 44, .1);
+}
+
+.menu-btn span {
+  width: 20px;
+  height: 2px;
+  background: var(--web-white);
+  border-radius: 2px;
+  transition: .25s transform, .25s opacity;
+}
+
+.menu-btn.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-btn.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-btn.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* =========================================================
+   SLIDEBAR / OFF-CANVAS DRAWER (from main.html)
+========================================================= */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 10, .6);
+  backdrop-filter: blur(2px);
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.drawer-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(300px, 84vw);
+  z-index: 31;
+  background: linear-gradient(180deg, rgba(11, 14, 28, .98), rgba(6, 8, 16, .99));
+  border-left: 1px solid var(--line);
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 20px;
+}
+
+.drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.drawer-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(242, 244, 249, .04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+}
+
+.drawer-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: #c3cbea;
+  border: 1px solid transparent;
+  transition: .2s background, .2s color, .2s border-color;
+}
+
+.drawer-link svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  stroke: currentColor;
+}
+
+.drawer-link:hover, .drawer-link.active {
+  color: var(--web-white);
+  background: linear-gradient(90deg, rgba(224, 36, 44, .25), rgba(61, 99, 232, .2));
+  border-color: rgba(255, 77, 77, .4);
+}
+
+/* =========================================================
+   MAIN EXPLORE CONTENT
+========================================================= */
+.explore-page {
+  min-height: calc(100vh - 80px);
+  padding: 35px 6% 50px;
+  position: relative;
+  z-index: 2;
+}
+
+/* HEADING */
+.page-heading {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.page-heading small {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #8792bb;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.page-heading h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.page-heading h1 span {
+  background: linear-gradient(90deg, var(--web-blue-2), var(--spider-red-2), var(--star-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* HORIZONTAL EXPLORER */
+.explorer {
+  max-width: 1200px;
+  min-height: 570px;
+  margin: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* PLANET SIDE */
+.planet-area {
+  width: 50%;
+  min-height: 500px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.orbit {
+  position: absolute;
+  width: 470px;
+  height: 190px;
+  border: 1px solid rgba(242, 244, 249, .12);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+  animation: orbitFloat 8s ease-in-out infinite;
+}
+
+.orbit.two {
+  width: 370px;
+  height: 145px;
+  transform: rotate(35deg);
+  opacity: .55;
+  animation-duration: 10s;
+}
+
+@keyframes orbitFloat {
+  0%, 100% { transform: rotate(-20deg) scale(1); }
+  50% { transform: rotate(-20deg) scale(1.04); }
+}
+
+/* PLANET */
+.planet-wrapper {
+  width: 330px;
+  height: 330px;
+  position: relative;
+  z-index: 3;
+  transition: transform .7s ease, opacity .4s ease;
+}
+
+.planet-wrapper.changing {
+  opacity: 0;
+  transform: translateX(-45px) scale(.88);
+}
+
+.planet-wrapper svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 35px rgba(61, 99, 232, .45));
+  animation: planetFloat 5s ease-in-out infinite;
+}
+
+.planet-wrapper svg .planet-body {
+  transform-origin: 150px 150px;
+  animation: planetRotate 18s linear infinite;
+}
+
+@keyframes planetRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes planetFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* INFORMATION SIDE */
+.info-area {
+  width: 50%;
+  padding: 35px 55px 35px 30px;
+  position: relative;
+}
+
+.planet-number {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--star-gold);
+  margin-bottom: 10px;
+}
+
+.planet-title {
+  font-family: 'Bangers', cursive;
+  font-size: clamp(32px, 4vw, 52px);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  line-height: 1.1;
+}
+
+.info-line {
+  width: 75px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--web-blue-2), var(--spider-red), var(--star-gold));
+  margin-bottom: 25px;
+}
+
+.planet-description {
+  max-width: 510px;
+  color: #b9c2e0;
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 30px;
+}
+
+/* QUICK FACTS */
+.quick-facts {
+  display: flex;
+  gap: 35px;
+  margin-bottom: 32px;
+}
+
+.quick-fact span {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8792bb;
+  margin-bottom: 4px;
+}
+
+.quick-fact strong {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: var(--web-white);
+}
+
+/* BUTTON */
+.view-details {
+  width: 190px;
+  height: 42px;
+  border: none;
+  color: white;
+  font-family: 'Bangers', cursive;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--spider-red), var(--web-blue));
+  box-shadow: 0 0 18px rgba(224, 36, 44, .3);
+  cursor: none;
+  transition: .3s;
+}
+
+.view-details:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(61, 99, 232, .45);
+}
+
+/* NAVIGATION ARROWS */
+.slider-arrow {
+  position: absolute;
+  top: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(14, 20, 38, .7);
+  color: white;
+  font-size: 22px;
+  cursor: none;
+  z-index: 10;
+  transform: translateY(-50%);
+  transition: .3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slider-arrow:hover {
+  border-color: var(--spider-red-2);
+  background: rgba(224, 36, 44, .2);
+  box-shadow: 0 0 20px rgba(224, 36, 44, .4);
+}
+
+.slider-arrow.prev { left: 15px; }
+.slider-arrow.next { right: 15px; }
+
+/* PLANET SELECTOR */
+.selector {
+  max-width: 1200px;
+  margin: 30px auto 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+}
+
+.selector-line {
+  width: 180px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(242, 244, 249, .25), transparent);
+  position: absolute;
+}
+
+.planet-dot {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(242, 244, 249, .4);
+  border-radius: 50%;
+  background: #060810;
+  cursor: none;
+  position: relative;
+  transition: .35s;
+  z-index: 2;
+}
+
+.planet-dot:hover {
+  transform: scale(1.3);
+  border-color: var(--spider-red-2);
+}
+
+.planet-dot.active {
+  width: 17px;
+  height: 17px;
+  background: linear-gradient(135deg, var(--spider-red), var(--web-blue-2));
+  border-color: white;
+  box-shadow: 0 0 18px rgba(224, 36, 44, .8);
+}
+
+/* COUNTER */
+.counter {
+  text-align: center;
+  margin-top: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: #8792bb;
+}
+
+/* DETAILS PANEL & OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 10, .7);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+  opacity: 0;
+  visibility: hidden;
+  transition: .4s;
+}
+
+.overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.details-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(470px, 100%);
+  height: 100vh;
+  padding: 35px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(11, 14, 28, .98), rgba(6, 8, 16, .99));
+  border-left: 1px solid var(--line);
+  z-index: 100;
+  transform: translateX(100%);
+  transition: transform .55s cubic-bezier(.77, 0, .18, 1);
+}
+
+.details-panel.open {
+  transform: translateX(0);
+}
+
+.close-panel {
+  background: none;
+  border: none;
+  color: #8792bb;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: none;
+  margin-bottom: 30px;
+  transition: .3s;
+}
+
+.close-panel:hover {
+  color: var(--star-gold);
+}
+
+.panel-planet {
+  width: 240px;
+  height: 240px;
+  margin: 0 auto 25px;
+}
+
+.panel-planet svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 35px rgba(61, 99, 232, .45));
+}
+
+.panel-planet svg .planet-body {
+  transform-origin: 150px 150px;
+  animation: planetRotate 18s linear infinite;
+}
+
+.panel-category {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--star-gold);
+  margin-bottom: 8px;
+}
+
+.panel-title {
+  text-align: center;
+  font-family: 'Bangers', cursive;
+  font-size: 36px;
+  letter-spacing: 2px;
+  margin-bottom: 18px;
+}
+
+.panel-description {
+  color: #b9c2e0;
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 28px;
+}
+
+.fact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.fact {
+  padding: 17px;
+  background: rgba(14, 20, 38, .8);
+}
+
+.fact-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8792bb;
+  margin-bottom: 5px;
+}
+
+.fact-value {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: var(--web-white);
+}
+
+/* RESPONSIVE STYLES */
+@media(max-width:900px) {
+  .explorer {
+    flex-direction: column;
+    min-height: auto;
+    padding: 35px 0;
+  }
+  .planet-area {
+    width: 100%;
+    min-height: 400px;
+  }
+  .info-area {
+    width: 100%;
+    padding: 20px 45px 30px;
+    text-align: center;
+  }
+  .info-line, .planet-description {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .quick-facts {
+    justify-content: center;
+  }
+  .view-details {
+    margin: auto;
+  }
+}
+
+@media(max-width:600px) {
+  .explore-page {
+    padding: 25px 5% 40px;
+  }
+  .page-heading {
+    margin-bottom: 20px;
+  }
+  .page-heading h1 {
+    font-size: 28px;
+  }
+  .explorer {
+    border-top: none;
+  }
+  .planet-area {
+    min-height: 330px;
+  }
+  .planet-wrapper {
+    width: 230px;
+    height: 230px;
+  }
+  .orbit {
+    width: 330px;
+    height: 135px;
+  }
+  .orbit.two {
+    width: 270px;
+    height: 105px;
+  }
+  .info-area {
+    padding: 10px 15px 25px;
+  }
+  .planet-title {
+    font-size: 32px;
+  }
+  .planet-description {
+    font-size: 14px;
+  }
+  .quick-facts {
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .slider-arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .slider-arrow.prev { left: 5px; }
+  .slider-arrow.next { right: 5px; }
+  .selector { gap: 12px; }
+  .details-panel { padding: 25px 20px; }
+  .panel-planet { width: 190px; height: 190px; }
+}
+
+@media(max-width:430px) {
+  .planet-area { min-height: 300px; }
+  .planet-wrapper { width: 205px; height: 205px; }
+  .orbit { width: 280px; height: 115px; }
+  .planet-title { font-size: 28px; }
+  .planet-description { font-size: 13px; line-height: 1.6; }
+  .quick-facts { gap: 12px; }
+  .quick-fact strong { font-size: 14px; }
+  .planet-dot { width: 10px; height: 10px; }
+  .planet-dot.active { width: 14px; height: 14px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- STARFIELD & TRAIL CANVAS FROM main.html -->
+<canvas id="stars"></canvas>
+<canvas id="web-trail-canvas"></canvas>
+
+<!-- CURSOR DOT FROM main.html -->
+<div id="cursor-dot">
+  <svg viewBox="0 0 40 40">
+    <g stroke="#ffffff" stroke-width="1.6" fill="none">
+      <circle cx="20" cy="20" r="6"/><circle cx="20" cy="20" r="11.5"/><circle cx="20" cy="20" r="17"/>
+      <line x1="20" y1="3" x2="20" y2="37"/><line x1="3" y1="20" x2="37" y2="20"/>
+      <line x1="8" y1="8" x2="32" y2="32"/><line x1="32" y1="8" x2="8" y2="32"/>
+    </g>
+    <circle cx="20" cy="20" r="3" fill="#ffffff"/>
+  </svg>
+</div>
+
+<!-- TOP NAV FROM main.html -->
+<nav class="top-nav">
+  <div class="brand-lockup">
+    <span class="web-mark">
+      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" stroke="#f2f4f9" stroke-width="1">
+        <circle cx="20" cy="20" r="17" fill="none" opacity=".5"/>
+        <circle cx="20" cy="20" r="11" fill="none" opacity=".5"/>
+        <g opacity=".5">
+          <line x1="20" y1="3" x2="20" y2="37"/>
+          <line x1="3" y1="20" x2="37" y2="20"/>
+          <line x1="7.5" y1="7.5" x2="32.5" y2="32.5"/>
+          <line x1="32.5" y1="7.5" x2="7.5" y2="32.5"/>
+        </g>
+      </svg>
+    </span>
+    <a href="main.html" class="brand-row">
+      <span class="logo-box">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="#f2f4f9" stroke-width="1.4"/>
+          <path d="M12 6.5c0 2.9 2.6 5.5 5.5 5.5-2.9 0-5.5 2.6-5.5 5.5 0-2.9-2.6-5.5-5.5-5.5 2.9 0 5.5-2.6 5.5-5.5Z" fill="#f2f4f9"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <span class="brand-title">AKASHGANGA</span>
+        <span class="brand-tagline">Explore Beyond</span>
+      </div>
+    </a>
+  </div>
+
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- OFF-CANVAS DRAWER SLIDEBAR FROM main.html -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <span class="brand-title" style="font-size:16px;">Menu</span>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#f2f4f9" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav">
+    <a class="drawer-link" href="main.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home
+    </a>
+    <a class="drawer-link active" href="exoplanets.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><ellipse cx="12" cy="12" rx="10" ry="3.4" transform="rotate(-24 12 12)"/></svg>
+      Exoplanets
+    </a>
+    <a class="drawer-link" href="facts.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+      Facts
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="explore-page">
+
+    <div class="page-heading">
+        <small>EXPLORE THE UNKNOWN</small>
+        <h1>EXPLORE <span>THE UNIVERSE</span></h1>
+    </div>
+
+    <!-- HORIZONTAL EXPLORER -->
+    <section class="explorer">
+        <button class="slider-arrow prev" id="prevBtn">‹</button>
+
+        <div class="planet-area">
+            <div class="orbit"></div>
+            <div class="orbit two"></div>
+            <div class="planet-wrapper" id="planetWrapper"></div>
+        </div>
+
+        <div class="info-area">
+            <div class="planet-number" id="planetNumber">EXOPLANET 01</div>
+            <h2 class="planet-title" id="planetTitle">KEPLER-22B</h2>
+            <div class="info-line"></div>
+            <p class="planet-description" id="planetDescription">
+                Kepler-22b is an exoplanet orbiting within the habitable zone of its star. Scientists study this distant world to understand whether conditions suitable for life could exist beyond our solar system.
+            </p>
+
+            <div class="quick-facts">
+                <div class="quick-fact">
+                    <span>TYPE</span>
+                    <strong id="planetType">SUPER-EARTH</strong>
+                </div>
+                <div class="quick-fact">
+                    <span>DISTANCE</span>
+                    <strong id="planetDistance">600 LY</strong>
+                </div>
+                <div class="quick-fact">
+                    <span>ORBIT</span>
+                    <strong id="planetOrbit">290 DAYS</strong>
+                </div>
+            </div>
+
+            <button class="view-details" id="viewDetails">VIEW DETAILS</button>
+        </div>
+
+        <button class="slider-arrow next" id="nextBtn">›</button>
+    </section>
+
+    <!-- SELECTOR -->
+    <div class="selector">
+        <div class="selector-line"></div>
+        <button class="planet-dot active" data-index="0"></button>
+        <button class="planet-dot" data-index="1"></button>
+        <button class="planet-dot" data-index="2"></button>
+        <button class="planet-dot" data-index="3"></button>
+        <button class="planet-dot" data-index="4"></button>
+        <button class="planet-dot" data-index="5"></button>
+    </div>
+
+    <div class="counter" id="counter">01 / 06</div>
+
+</main>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"></div>
+
+<!-- DETAILS PANEL -->
+<aside class="details-panel" id="detailsPanel">
+    <button class="close-panel" id="closePanel">← BACK TO EXPLORER</button>
+    <div class="panel-planet" id="panelPlanet"></div>
+    <div class="panel-category" id="panelCategory">EXOPLANET 01</div>
+    <h2 class="panel-title" id="panelTitle">KEPLER-22B</h2>
+    <p class="panel-description" id="panelDescription"></p>
+
+    <div class="fact-grid">
+        <div class="fact">
+            <div class="fact-label">TYPE</div>
+            <div class="fact-value" id="factType"></div>
+        </div>
+        <div class="fact">
+            <div class="fact-label">DISTANCE</div>
+            <div class="fact-value" id="factDistance"></div>
+        </div>
+        <div class="fact">
+            <div class="fact-label">ORBIT</div>
+            <div class="fact-value" id="factOrbit"></div>
+        </div>
+        <div class="fact">
+            <div class="fact-label">DISCOVERED</div>
+            <div class="fact-value" id="factYear"></div>
+        </div>
+    </div>
+</aside>
+
+<script>
+/* =========================================================
+   1. STARFIELD BACKGROUND (from main.html)
+========================================================= */
+(function(){
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let w, h, stars = [];
+
+  function resize(){ 
+    w = canvas.width = window.innerWidth; 
+    h = canvas.height = document.documentElement.scrollHeight; 
+  }
+
+  function makeStars(){
+    stars = [];
+    const count = Math.floor((w * h) / 9500);
+    for(let i = 0; i < count; i++){
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.3 + .3,
+        speed: Math.random() * .4 + .05,
+        phase: Math.random() * Math.PI * 2,
+        gold: Math.random() < .12
+      });
+    }
+  }
+
+  function draw(t){
+    ctx.fillStyle = '#060810'; 
+    ctx.fillRect(0, 0, w, h);
+    for(const s of stars){
+      const tw = .5 + .5 * Math.sin(t * .001 * s.speed * 4 + s.phase);
+      ctx.globalAlpha = .25 + tw * .75;
+      ctx.fillStyle = s.gold ? '#ffcc33' : '#f2f4f9';
+      ctx.beginPath(); 
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); 
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); makeStars(); });
+  resize(); 
+  makeStars(); 
+  requestAnimationFrame(draw);
+})();
+
+/* =========================================================
+   2. WEB-SHOOTER CURSOR & CANVAS TRAIL (from main.html)
+========================================================= */
+(function(){
+  const dot = document.getElementById('cursor-dot');
+  const canvas = document.getElementById('web-trail-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, segments = [], sparks = [];
+
+  function resize(){ 
+    w = canvas.width = window.innerWidth; 
+    h = canvas.height = window.innerHeight; 
+  }
+  window.addEventListener('resize', resize); 
+  resize();
+
+  const SPARK_COLORS = ['224,36,44', '61,99,232'];
+
+  function spawnSparks(x, y, count){
+    for(let i = 0; i < count; i++){
+      const angle = Math.random() * Math.PI * 2;
+      const speed = .6 + Math.random() * 1.8;
+      sparks.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: .8 + Math.random() * 1.6,
+        life: 1,
+        color: SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]
+      });
+    }
+    if(sparks.length > 140) sparks.splice(0, sparks.length - 140);
+  }
+
+  let lastX = null, lastY = null;
+  function addPoint(x, y){
+    dot.style.left = x + 'px'; 
+    dot.style.top = y + 'px';
+    const dist = lastX === null ? 999 : Math.hypot(x - lastX, y - lastY);
+    if(dist > 4){
+      if(lastX !== null) segments.push({x1: lastX, y1: lastY, x2: x, y2: y, life: 1});
+      spawnSparks(x, y, 2 + Math.floor(Math.random() * 2));
+      lastX = x; 
+      lastY = y;
+      if(segments.length > 10) segments.shift();
+    }
+  }
+
+  window.addEventListener('mousemove', e => addPoint(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    const t = e.touches[0]; 
+    if(!t) return; 
+    addPoint(t.clientX, t.clientY);
+  }, {passive: true});
+
+  window.addEventListener('mousedown', () => { 
+    dot.classList.add('pulse'); 
+    if(lastX !== null) spawnSparks(lastX, lastY, 14); 
+  });
+  window.addEventListener('mouseup', () => dot.classList.remove('pulse'));
+
+  function render(){
+    ctx.clearRect(0, 0, w, h);
+
+    for(const s of segments){
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+      ctx.strokeStyle = `rgba(242,244,249,${(0.75 * s.life).toFixed(3)})`;
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+    segments.forEach(s => s.life -= 0.12);
+    segments = segments.filter(s => s.life > 0);
+
+    for(const p of sparks){
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.life.toFixed(3)})`;
+      ctx.shadowColor = `rgba(${p.color},.9)`;
+      ctx.shadowBlur = 4;
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    sparks.forEach(p => { 
+      p.x += p.vx; 
+      p.y += p.vy; 
+      p.vx *= .94; 
+      p.vy *= .94; 
+      p.life -= 0.028; 
+    });
+    sparks = sparks.filter(p => p.life > 0);
+
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+
+/* =========================================================
+   3. DRAWER SLIDEBAR TOGGLE (from main.html)
+========================================================= */
+(function(){
+  const btn = document.getElementById('menuBtn');
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('drawerOverlay');
+  const closeBtn = document.getElementById('drawerClose');
+
+  function openDrawer(){
+    drawer.classList.add('open'); 
+    overlay.classList.add('show'); 
+    btn.classList.add('open');
+  }
+
+  function closeDrawer(){
+    drawer.classList.remove('open'); 
+    overlay.classList.remove('show'); 
+    btn.classList.remove('open');
+  }
+
+  btn.addEventListener('click', () => drawer.classList.contains('open') ? closeDrawer() : openDrawer());
+  closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+})();
+
+/* =========================================================
+   4. PLANET CAROUSEL & DATA LOGIC
+========================================================= */
+const planets = [
+    {
+        name:"KEPLER-22B",
+        category:"EXOPLANET 01",
+        type:"SUPER-EARTH",
+        distance:"600 LY",
+        orbit:"290 DAYS",
+        year:"2011",
+        description:"Kepler-22b is an exoplanet orbiting within the habitable zone of its star. Scientists study this distant world to understand whether conditions suitable for life could exist beyond our solar system.",
+        color:"blue"
+    },
+    {
+        name:"TRAPPIST-1E",
+        category:"EXOPLANET 02",
+        type:"TERRESTRIAL",
+        distance:"40 LY",
+        orbit:"6.1 DAYS",
+        year:"2017",
+        description:"TRAPPIST-1e is an Earth-sized world orbiting the ultra-cool red dwarf TRAPPIST-1. Its location makes it one of the most interesting planets for studying potentially habitable environments.",
+        color:"red"
+    },
+    {
+        name:"51 PEGASI B",
+        category:"EXOPLANET 03",
+        type:"HOT JUPITER",
+        distance:"50 LY",
+        orbit:"4.2 DAYS",
+        year:"1995",
+        description:"51 Pegasi b was the first confirmed exoplanet discovered orbiting a Sun-like star. Its discovery changed our understanding of planetary systems throughout the galaxy.",
+        color:"gold"
+    },
+    {
+        name:"HD 209458 B",
+        category:"EXOPLANET 04",
+        type:"HOT GAS GIANT",
+        distance:"159 LY",
+        orbit:"3.5 DAYS",
+        year:"1999",
+        description:"HD 209458 b is a gas giant that passes directly in front of its host star from our perspective. Observations of its atmosphere have helped scientists study planets outside our solar system.",
+        color:"purple"
+    },
+    {
+        name:"K2-18 B",
+        category:"EXOPLANET 05",
+        type:"SUB-NEPTUNE",
+        distance:"124 LY",
+        orbit:"33 DAYS",
+        year:"2015",
+        description:"K2-18b is a sub-Neptune-sized planet orbiting in the habitable zone of its star. Its atmosphere makes it an important target for future observations.",
+        color:"cyan"
+    },
+    {
+        name:"PROXIMA B",
+        category:"EXOPLANET 06",
+        type:"TERRESTRIAL",
+        distance:"4.24 LY",
+        orbit:"11 DAYS",
+        year:"2016",
+        description:"Proxima Centauri b is one of the closest known exoplanets to Earth. It orbits our nearest stellar neighbour and remains an important target in the search for nearby worlds.",
+        color:"orange"
+    }
+];
+
+function createPlanetSVG(type){
+    let gradient, details;
+
+    if(type === "blue"){
+        gradient = `
+            <radialGradient id="planetBlue">
+                <stop offset="0%" stop-color="#86bfff"/>
+                <stop offset="45%" stop-color="#426ad1"/>
+                <stop offset="80%" stop-color="#17275c"/>
+                <stop offset="100%" stop-color="#050814"/>
+            </radialGradient>
+        `;
+        details = `
+            <path d="M45 125 Q150 75 255 125" fill="none" stroke="#a9d2ff" stroke-width="12" opacity=".22"/>
+            <path d="M50 180 Q150 130 250 180" fill="none" stroke="#14265c" stroke-width="15" opacity=".55"/>
+            <path d="M85 210 Q150 180 215 210" fill="none" stroke="#91bdff" stroke-width="7" opacity=".25"/>
+        `;
+    } else if(type === "red"){
+        gradient = `
+            <radialGradient id="planetRed">
+                <stop offset="0%" stop-color="#ffad91"/>
+                <stop offset="45%" stop-color="#c4494d"/>
+                <stop offset="80%" stop-color="#591e2a"/>
+                <stop offset="100%" stop-color="#090510"/>
+            </radialGradient>
+        `;
+        details = `
+            <circle cx="100" cy="100" r="22" fill="#6e2730"/>
+            <circle cx="190" cy="165" r="30" fill="#742c34"/>
+            <circle cx="130" cy="205" r="16" fill="#63242d"/>
+            <path d="M60 135 Q150 110 240 135" fill="none" stroke="#ffb09b" stroke-width="6" opacity=".25"/>
+        `;
+    } else if(type === "gold"){
+        gradient = `
+            <radialGradient id="planetGold">
+                <stop offset="0%" stop-color="#f6dfab"/>
+                <stop offset="45%" stop-color="#c89d60"/>
+                <stop offset="80%" stop-color="#715038"/>
+                <stop offset="100%" stop-color="#110d10"/>
+            </radialGradient>
+        `;
+        details = `
+            <path d="M45 100 Q150 70 255 100" stroke="#f0d49a" stroke-width="14" fill="none" opacity=".45"/>
+            <path d="M40 145 Q150 120 260 145" stroke="#684b39" stroke-width="17" fill="none" opacity=".65"/>
+            <path d="M50 190 Q150 160 250 190" stroke="#dfbd7f" stroke-width="11" fill="none" opacity=".38"/>
+        `;
+    } else if(type === "purple"){
+        gradient = `
+            <radialGradient id="planetPurple">
+                <stop offset="0%" stop-color="#d29aff"/>
+                <stop offset="45%" stop-color="#7a49c5"/>
+                <stop offset="80%" stop-color="#33205e"/>
+                <stop offset="100%" stop-color="#090511"/>
+            </radialGradient>
+        `;
+        details = `
+            <path d="M50 120 Q150 80 250 120" stroke="#e0baff" stroke-width="12" fill="none" opacity=".28"/>
+            <path d="M55 170 Q150 135 245 170" stroke="#321d5e" stroke-width="17" fill="none" opacity=".7"/>
+            <circle cx="100" cy="95" r="30" fill="white" opacity=".05"/>
+        `;
+    } else if(type === "cyan"){
+        gradient = `
+            <radialGradient id="planetCyan">
+                <stop offset="0%" stop-color="#9ffaff"/>
+                <stop offset="45%" stop-color="#3f9da8"/>
+                <stop offset="80%" stop-color="#163d52"/>
+                <stop offset="100%" stop-color="#040a12"/>
+            </radialGradient>
+        `;
+        details = `
+            <path d="M45 125 Q150 90 255 125" stroke="#b7ffff" stroke-width="12" fill="none" opacity=".25"/>
+            <path d="M55 175 Q150 140 245 175" stroke="#17465b" stroke-width="16" fill="none" opacity=".7"/>
+            <circle cx="110" cy="95" r="30" fill="white" opacity=".07"/>
+        `;
+    } else {
+        gradient = `
+            <radialGradient id="planetOrange">
+                <stop offset="0%" stop-color="#ffc083"/>
+                <stop offset="45%" stop-color="#d46b3e"/>
+                <stop offset="80%" stop-color="#682b25"/>
+                <stop offset="100%" stop-color="#0c070a"/>
+            </radialGradient>
+        `;
+        details = `
+            <path d="M50 125 Q150 85 250 125" stroke="#ffd39e" stroke-width="10" fill="none" opacity=".28"/>
+            <circle cx="100" cy="160" r="22" fill="#7b332a"/>
+            <circle cx="190" cy="100" r="28" fill="#6d3029"/>
+        `;
+    }
+
+    return `
+        <svg viewBox="0 0 300 300">
+            <defs>${gradient}</defs>
+            <g class="planet-body">
+                <circle cx="150" cy="150" r="110" fill="url(#planet${type.charAt(0).toUpperCase()+type.slice(1)})"/>
+                ${details}
+                <ellipse cx="115" cy="90" rx="42" ry="28" fill="white" opacity=".06"/>
+            </g>
+        </svg>
+    `;
+}
+
+const planetWrapper = document.getElementById("planetWrapper");
+const planetNumber = document.getElementById("planetNumber");
+const planetTitle = document.getElementById("planetTitle");
+const planetDescription = document.getElementById("planetDescription");
+const planetType = document.getElementById("planetType");
+const planetDistance = document.getElementById("planetDistance");
+const planetOrbit = document.getElementById("planetOrbit");
+const counter = document.getElementById("counter");
+const dots = document.querySelectorAll(".planet-dot");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+let currentPlanet = 0;
+let changing = false;
+
+function loadPlanet(index){
+    if(changing) return;
+    changing = true;
+    currentPlanet = index;
+    const planet = planets[index];
+
+    planetWrapper.classList.add("changing");
+
+    setTimeout(function(){
+        planetWrapper.innerHTML = createPlanetSVG(planet.color);
+        planetNumber.textContent = planet.category;
+        planetTitle.textContent = planet.name;
+        planetDescription.textContent = planet.description;
+        planetType.textContent = planet.type;
+        planetDistance.textContent = planet.distance;
+        planetOrbit.textContent = planet.orbit;
+        counter.textContent = String(index + 1).padStart(2,"0") + " / " + String(planets.length).padStart(2,"0");
+
+        dots.forEach((dot,i) => dot.classList.toggle("active", i === index));
+        planetWrapper.classList.remove("changing");
+
+        setTimeout(() => { changing = false; }, 400);
+    }, 350);
+}
+
+function nextPlanet(){
+    let next = currentPlanet + 1;
+    if(next >= planets.length) next = 0;
+    loadPlanet(next);
+}
+
+function previousPlanet(){
+    let previous = currentPlanet - 1;
+    if(previous < 0) previous = planets.length - 1;
+    loadPlanet(previous);
+}
+
+nextBtn.addEventListener("click", nextPlanet);
+prevBtn.addEventListener("click", previousPlanet);
+
+dots.forEach(dot => {
+    dot.addEventListener("click", () => loadPlanet(Number(dot.dataset.index)));
+});
+
+document.addEventListener("keydown", function(event){
+    if(event.key === "ArrowRight") nextPlanet();
+    if(event.key === "ArrowLeft") previousPlanet();
+    if(event.key === "Escape") closePanel();
+});
+
+/* =========================================================
+   5. DETAILS PANEL SLIDE-OVER
+========================================================= */
+const viewDetails = document.getElementById("viewDetails");
+const detailsPanel = document.getElementById("detailsPanel");
+const overlay = document.getElementById("overlay");
+const closePanelButton = document.getElementById("closePanel");
+const panelPlanet = document.getElementById("panelPlanet");
+const panelCategory = document.getElementById("panelCategory");
+const panelTitle = document.getElementById("panelTitle");
+const panelDescription = document.getElementById("panelDescription");
+const factType = document.getElementById("factType");
+const factDistance = document.getElementById("factDistance");
+const factOrbit = document.getElementById("factOrbit");
+const factYear = document.getElementById("factYear");
+
+viewDetails.addEventListener("click", function(){
+    const planet = planets[currentPlanet];
+
+    panelPlanet.innerHTML = createPlanetSVG(planet.color);
+    panelCategory.textContent = planet.category;
+    panelTitle.textContent = planet.name;
+    panelDescription.textContent = planet.description;
+    factType.textContent = planet.type;
+    factDistance.textContent = planet.distance;
+    factOrbit.textContent = planet.orbit;
+    factYear.textContent = planet.year;
+
+    detailsPanel.classList.add("open");
+    overlay.classList.add("show");
+    document.body.style.overflow = "hidden";
+});
+
+function closePanel(){
+    detailsPanel.classList.remove("open");
+    overlay.classList.remove("show");
+    document.body.style.overflow = "";
+}
+
+closePanelButton.addEventListener("click", closePanel);
+overlay.addEventListener("click", closePanel);
+
+/* TOUCH SWIPE CONTROLS */
+let touchStartX = 0;
+document.addEventListener("touchstart", e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener("touchend", e => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if(Math.abs(diff) < 50) return;
+    if(diff > 0) nextPlanet();
+    else previousPlanet();
+}, {passive:true});
+
+/* INITIAL LOAD */
+loadPlanet(0);
+</script>
+
+</body>
+</html>
